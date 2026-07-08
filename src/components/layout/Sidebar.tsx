@@ -70,7 +70,7 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
       {/* Top Section - Brand Logo */}
       <div className="flex flex-col">
         <div
-          className={`flex items-center gap-3 py-5 border-b border-[#27272A] transition-all duration-300 ${
+          className={`flex items-center gap-3 h-16 border-b border-[#27272A] transition-all duration-300 ${
             isCollapsed ? "px-6 justify-center" : "px-6"
           }`}
         >
