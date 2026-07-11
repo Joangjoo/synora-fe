@@ -1,8 +1,12 @@
 export interface BackendProject {
   id: string;
-  user_id: string;
   project_name: string;
+  client_name: string;
+  client_email: string;
   status: string; // 'DRAFT', 'SUBMITTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'
+  approval_status: string; // 'PENDING', 'SENT', 'APPROVED', 'REVISION'
+  approval_note?: string | null;
+  magic_token?: string | null;
   created_at: string;
   updated_at: string;
   design_images?: string | null;

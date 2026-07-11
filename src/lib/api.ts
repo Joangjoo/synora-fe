@@ -1,29 +1,12 @@
 import axios from "axios";
 
+// Di Next.js App Router (Client Components), jika baseURL adalah "/api",
+// ia akan menambahkan "/api" di belakang origin domain (misal ngrok-anda.com/api).
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: "/api",
   headers: {
     "Content-Type": "application/json",
   },
 });
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      window.location.href = "/login";
-    }
-    return Promise.reject(error);
-  }
-);
 
 export default api;

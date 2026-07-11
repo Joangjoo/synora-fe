@@ -47,27 +47,27 @@ export function Statistics({ projectsDetails }: StatisticsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
           <div
             key={stat.name}
-            className="border rounded-2xl p-5 flex items-center justify-between h-[100px] text-left bg-[#18181B] border-[#27272A] hover:border-purple-500/30 transition-all group"
+            className="border rounded-2xl p-6 flex items-center justify-between h-[130px] text-left bg-[#18181B] border-[#27272A] hover:border-purple-500/30 transition-all group"
           >
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider block">
+            <div className="space-y-1.5 min-w-0">
+              <span className="text-[11px] font-black text-muted-foreground/60 uppercase tracking-widest block">
                 {stat.name}
               </span>
-              <span className="text-2xl font-black text-foreground leading-none block">
+              <span className="text-4xl font-black text-foreground leading-none block font-mono">
                 {stat.value}
               </span>
-              <span className="text-[9px] text-muted-foreground block truncate max-w-[200px]">
+              <span className="text-xs text-muted-foreground block truncate max-w-[240px] mt-0.5">
                 {stat.description}
               </span>
             </div>
-            <div className={`p-2.5 rounded-xl border ${stat.color} shrink-0`}>
-              <Icon size={18} className={stat.iconColor} />
+            <div className={`p-3.5 rounded-2xl border ${stat.color} shrink-0`}>
+              <Icon size={24} className={stat.iconColor} />
             </div>
           </div>
         );

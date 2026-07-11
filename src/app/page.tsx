@@ -1,4 +1,5 @@
-import LoginPage, { metadata } from "./login/page";
+import { redirect } from "next/navigation";
 
-export { metadata };
-export default LoginPage;
+export default function Home() {
+  redirect("/dashboard");
+}

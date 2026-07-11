@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { WelcomeCard } from "./WelcomeCard";
 import { Statistics } from "./Statistics";
 import { RecentProjects } from "./RecentProjects";
 import { QuickAction } from "./QuickAction";
@@ -51,22 +50,29 @@ export function ClientDashboard() {
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full select-none text-left">
+    <div className="flex flex-col gap-8 w-full select-none text-left">
       {/* Welcome Greeting Banner */}
-      <WelcomeCard />
+      <div className="rounded-2xl border border-[#27272A] bg-[#18181B] p-8 hover:border-purple-500/20 transition-all shadow-lg">
+        <h2 className="text-3xl font-black tracking-tight text-foreground">
+          Welcome to Synora Dashboard
+        </h2>
+        <p className="text-muted-foreground text-sm mt-2.5">
+          Here&apos;s a live overview of your projects, active AI pipeline agents, and system activity logs.
+        </p>
+      </div>
 
       {/* Statistics Grid (Active, Completed, Waiting Review) */}
       <Statistics projectsDetails={projectsDetails} />
 
       {/* Quick Action & Double-column Project/Activity list */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Left side takes 2 cols for Recent Projects */}
         <div className="lg:col-span-2 w-full">
           <RecentProjects projectsDetails={projectsDetails} />
         </div>
 
         {/* Right side takes 1 col for Quick Actions */}
-        <div className="w-full flex flex-col gap-6">
+        <div className="w-full flex flex-col gap-8">
           <QuickAction />
         </div>
       </div>

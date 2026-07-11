@@ -80,18 +80,18 @@ export function RecentProjects({ projectsDetails }: RecentProjectsProps) {
   };
 
   return (
-    <div className="w-full bg-[#18181B] border border-[#27272A] rounded-2xl p-5 flex flex-col justify-between h-[340px] text-left">
+    <div className="w-full bg-[#18181B] border border-[#27272A] rounded-2xl p-6 flex flex-col justify-between h-[420px] text-left">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[#27272A]/50 pb-4 mb-2">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-purple-600/10 text-purple-400">
-            <Folder size={14} />
+      <div className="flex items-center justify-between border-b border-[#27272A]/50 pb-5 mb-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-purple-600/10 text-purple-400">
+            <Folder size={18} />
           </div>
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+            <h3 className="text-sm font-black uppercase tracking-widest text-foreground">
               Proyek Terbaru
             </h3>
-            <span className="text-[9px] text-muted-foreground/60">
+            <span className="text-xs text-muted-foreground/60">
               Ikhtisar dari inisiatif terbaru Anda
             </span>
           </div>
@@ -100,14 +100,14 @@ export function RecentProjects({ projectsDetails }: RecentProjectsProps) {
           onClick={() => router.push("/dashboard/projects")}
           className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer outline-none bg-transparent border-none"
         >
-          <MoreHorizontal size={16} />
+          <MoreHorizontal size={20} />
         </button>
       </div>
 
       {/* Projects list */}
-      <div className="flex-1 overflow-y-auto space-y-3 pr-1 pt-1">
+      <div className="flex-1 overflow-y-auto space-y-4 pr-1 pt-1 scrollbar-thin">
         {sortedProjects.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center text-xs text-muted-foreground/50 py-12">
+          <div className="h-full flex flex-col items-center justify-center text-center text-sm text-muted-foreground/50 py-16">
             Belum ada proyek yang dibuat.
           </div>
         ) : (
@@ -117,36 +117,36 @@ export function RecentProjects({ projectsDetails }: RecentProjectsProps) {
             return (
               <div
                 key={item.project.id}
-                className="p-3.5 rounded-xl border border-[#27272A] bg-[#111113] hover:border-purple-500/20 transition-all flex items-center justify-between gap-4"
+                className="p-5 rounded-2xl border border-[#27272A] bg-[#111113] hover:border-purple-500/20 transition-all flex items-center justify-between gap-6"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2.5 mb-1.5">
-                    <span className="text-xs font-bold text-foreground truncate max-w-[150px]">
+                  <div className="flex items-center gap-3 mb-2.5">
+                    <span className="text-sm font-black text-foreground truncate max-w-[200px]">
                       {item.project.project_name}
                     </span>
-                    <span className="text-[8px] font-extrabold tracking-widest uppercase bg-purple-500/10 border border-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] font-black tracking-widest uppercase bg-purple-500/10 border border-purple-500/20 text-purple-400 px-2.5 py-0.5 rounded">
                       {activeStage}
                     </span>
                   </div>
 
                   {/* Progress bar */}
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex-1 h-1 bg-[#18181B] border border-[#27272A] rounded-full overflow-hidden">
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex-1 h-2 bg-[#18181B] border border-[#27272A] rounded-full overflow-hidden">
                       <div
                         className="h-full bg-purple-500 rounded-full"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
-                    <span className="text-[9px] font-bold text-muted-foreground/80 font-mono">
+                    <span className="text-xs font-black text-muted-foreground/85 font-mono">
                       {progress}%
                     </span>
                   </div>
                 </div>
 
                 {/* Status badge & detail link */}
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-4 shrink-0">
                   <span
-                    className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${getStatusColor(item.project.status)}`}
+                    className={`text-xs font-extrabold px-3 py-1 rounded-full border ${getStatusColor(item.project.status)}`}
                   >
                     {getStatusText(item.project.status)}
                   </span>
@@ -154,9 +154,9 @@ export function RecentProjects({ projectsDetails }: RecentProjectsProps) {
                     onClick={() =>
                       router.push(`/dashboard/projects?id=${item.project.id}`)
                     }
-                    className="size-7 rounded-lg border border-[#27272A] bg-[#18181B] hover:bg-[#27272A] text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer outline-none"
+                    className="size-9 rounded-xl border border-[#27272A] bg-[#18181B] hover:bg-[#27272A] text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer outline-none"
                   >
-                    <ArrowUpRight size={12} />
+                    <ArrowUpRight size={16} />
                   </button>
                 </div>
               </div>

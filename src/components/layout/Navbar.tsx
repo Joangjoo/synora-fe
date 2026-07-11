@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Menu, Bell, ChevronDown, User, LogOut } from "lucide-react";
-import { useAuthStore } from "@/stores/auth.store";
+import { Menu, Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { BackendProject, ProjectDetailResponse } from "@/types/project";
@@ -24,17 +23,13 @@ interface NavbarProps {
 
 export function Navbar({ isCollapsed, onToggleSidebar }: NavbarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [lastReadTime, setLastReadTime] = useState<number>(Date.now());
   const [hasUnread, setHasUnread] = useState(false);
 
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-  const userRole = user?.role || "CLIENT";
   const router = useRouter();
 
   const notifRef = useRef<HTMLDivElement>(null);
-  const profileRef = useRef<HTMLDivElement>(null);
 
   const formatRelativeTime = (dateStr: string) => {
     const diffMs = new Date().getTime() - new Date(dateStr).getTime();
@@ -72,6 +67,18 @@ export function Navbar({ isCollapsed, onToggleSidebar }: NavbarProps) {
           project_id: proj.id,
         });
 
+        if (proj.approval_status === "REVISION") {
+          list.push({
+            id: `${proj.id}-revision`,
+            dotColor: "bg-red-500",
+            title: `Revisi: "${proj.project_name}"`,
+            description: proj.approval_note ? `Catatan: ${proj.approval_note.substring(0, 50)}...` : "Klien meminta revisi BRD.",
+            time: formatRelativeTime(proj.updated_at),
+            timestamp: new Date(proj.updated_at).getTime(),
+            project_id: proj.id,
+          });
+        }
+
         if (proj.status === "COMPLETED") {
           list.push({
             id: `${proj.id}-completed`,
@@ -102,14 +109,17 @@ export function Navbar({ isCollapsed, onToggleSidebar }: NavbarProps) {
       });
 
       list.sort((a, b) => b.timestamp - a.timestamp);
-      setNotifications(list.slice(0, 15));
-      if (list.length > 0) {
+      const topList = list.slice(0, 15);
+      setNotifications(topList);
+      
+      // Check if there are new unread notifications
+      if (topList.length > 0 && topList[0].timestamp > lastReadTime) {
         setHasUnread(true);
       }
     } catch (err) {
       console.error("Gagal memuat notifikasi:", err);
     }
-  }, []);
+  }, [lastReadTime]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -125,21 +135,12 @@ export function Navbar({ isCollapsed, onToggleSidebar }: NavbarProps) {
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
         setShowNotifications(false);
       }
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-        setShowProfileMenu(false);
-      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
-    setShowProfileMenu(false);
-  };
 
   return (
     <header className="h-16 border-b border-[#27272A] bg-[#09090B] flex items-center justify-between px-6 sticky top-0 z-20 w-full select-none">
@@ -174,7 +175,10 @@ export function Navbar({ isCollapsed, onToggleSidebar }: NavbarProps) {
           <button
             onClick={() => {
               setShowNotifications(!showNotifications);
-              setHasUnread(false);
+              if (!showNotifications) {
+                setHasUnread(false);
+                setLastReadTime(Date.now());
+              }
             }}
             className={`relative w-8 h-8 rounded-lg border flex items-center justify-center transition-colors cursor-pointer outline-none ${
               showNotifications
@@ -196,7 +200,10 @@ export function Navbar({ isCollapsed, onToggleSidebar }: NavbarProps) {
                   Notifikasi
                 </span>
                 <span
-                  onClick={() => setHasUnread(false)}
+                  onClick={() => {
+                    setHasUnread(false);
+                    setLastReadTime(Date.now());
+                  }}
                   className="text-[10px] text-purple-400 font-semibold cursor-pointer hover:underline"
                 >
                   Tandai sudah dibaca
@@ -253,51 +260,13 @@ export function Navbar({ isCollapsed, onToggleSidebar }: NavbarProps) {
           )}
         </div>
 
-        {/* User Dropdown & Developer Role Switcher */}
-        <div className="relative" ref={profileRef}>
-          <div
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className={`flex items-center gap-2.5 pl-2 border-l border-[#27272A] cursor-pointer group select-none ${
-              showProfileMenu ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
+        {/* Profile Info */}
+        <div className="relative">
+          <div className="flex items-center gap-2.5 pl-2 border-l border-[#27272A] select-none text-foreground">
             <div className="w-8 h-8 rounded-full border border-purple-500/30 overflow-hidden bg-purple-500/10 flex items-center justify-center text-xs font-bold text-purple-400">
-              {user?.full_name ? user.full_name.substring(0, 2).toUpperCase() : "IZ"}
+              IZ
             </div>
-            <ChevronDown size={12} className="transition-transform group-hover:translate-y-0.5" />
           </div>
-
-          {/* Floating Dropdown Profile Menu */}
-          {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-56 bg-[#18181B] border border-[#27272A] rounded-xl shadow-2xl overflow-hidden z-50 text-left animate-fadeIn">
-              <div className="p-3 border-b border-[#27272A] bg-[#111113]">
-                <p className="text-base font-bold text-foreground truncate">
-                  {user?.full_name || "Profil CEO"}
-                </p>
-                <p className="text-sm text-muted-foreground/60 truncate">
-                  {user?.email || "izhal@synora.id"}
-                </p>
-                <span className="inline-block text-[8px] font-extrabold tracking-widest uppercase bg-purple-500/10 border border-purple-500/35 text-purple-400 px-1.5 py-0.5 rounded mt-1.5 leading-none">
-                  {userRole}
-                </span>
-              </div>
-
-              {/* User standard actions */}
-              <div className="p-1 space-y-0.5">
-                <button className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs hover:bg-[#111113] text-muted-foreground hover:text-foreground transition-colors cursor-pointer outline-none">
-                  <User size={14} />
-                  <span>Profil Saya</span>
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors cursor-pointer outline-none"
-                >
-                  <LogOut size={14} />
-                  <span>Keluar</span>
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </header>

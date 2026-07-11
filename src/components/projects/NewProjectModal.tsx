@@ -8,6 +8,8 @@ interface NewProjectModalProps {
   onClose: () => void;
   onCreate: (
     name: string,
+    clientName: string,
+    clientEmail: string,
     designImages: string,
     designNote: string,
   ) => Promise<void>;
@@ -21,6 +23,8 @@ export function NewProjectModal({
   isCreating,
 }: NewProjectModalProps) {
   const [name, setName] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
   const [designNote, setDesignNote] = useState("");
   const [images, setImages] = useState<string[]>([]);
 
@@ -43,20 +47,24 @@ export function NewProjectModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || !clientName.trim() || !clientEmail.trim()) return;
 
     // Serialize images as a JSON string
     const imagesPayload = images.length > 0 ? JSON.stringify(images) : "";
-    await onCreate(name, imagesPayload, designNote);
+    await onCreate(name, clientName, clientEmail, imagesPayload, designNote);
     
     // Reset state
     setName("");
+    setClientName("");
+    setClientEmail("");
     setDesignNote("");
     setImages([]);
   };
 
   const handleCancel = () => {
     setName("");
+    setClientName("");
+    setClientEmail("");
     setDesignNote("");
     setImages([]);
     onClose();
@@ -85,6 +93,34 @@ export function NewProjectModal({
 
         {/* Modal Form */}
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 text-left overflow-y-auto max-h-[75vh]">
+          {/* Client Name */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Nama Klien
+            </label>
+            <input
+              type="text"
+              placeholder="Masukkan Nama Klien..."
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              className="w-full h-11 rounded-xl bg-[#111113] border border-[#27272A] px-4 text-xs text-foreground placeholder:text-muted-foreground/30 outline-none focus:border-purple-500/50 transition-colors"
+            />
+          </div>
+
+          {/* Client Email */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Email Klien (Untuk BRD)
+            </label>
+            <input
+              type="email"
+              placeholder="Masukkan Email Klien..."
+              value={clientEmail}
+              onChange={(e) => setClientEmail(e.target.value)}
+              className="w-full h-11 rounded-xl bg-[#111113] border border-[#27272A] px-4 text-xs text-foreground placeholder:text-muted-foreground/30 outline-none focus:border-purple-500/50 transition-colors"
+            />
+          </div>
+
           {/* Project Name */}
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
@@ -179,7 +215,7 @@ export function NewProjectModal({
             </button>
             <button
               type="submit"
-              disabled={isCreating || !name.trim()}
+              disabled={isCreating || !name.trim() || !clientName.trim() || !clientEmail.trim()}
               className="h-10 px-5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:bg-zinc-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-purple-600/20 transition-colors cursor-pointer outline-none border-none"
             >
               {isCreating ? "Menyimpan..." : "Lanjutkan"}

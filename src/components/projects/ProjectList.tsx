@@ -2,17 +2,16 @@
 
 import React, { useState } from "react";
 import { Folder, Plus, Search, Cpu, ChevronRight, Trash2 } from "lucide-react";
-import { BackendProject } from "@/types/project";
+import { BackendProject } from "@/types/project"; // If needed, but let's just assume any interface in types/project
 
 interface ProjectListProps {
   projects: BackendProject[];
-  userRole: string;
   onOpenCreateModal: () => void;
   onSelectProject: (id: string) => void;
-  onDeleteProject: (project: BackendProject) => void;
+  onDeleteProject: (id: string) => void;
 }
 
-export function ProjectList({ projects, userRole, onOpenCreateModal, onSelectProject, onDeleteProject }: ProjectListProps) {
+export function ProjectList({ projects, onOpenCreateModal, onSelectProject, onDeleteProject }: ProjectListProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredProjects = projects?.filter((p) =>
@@ -47,28 +46,24 @@ export function ProjectList({ projects, userRole, onOpenCreateModal, onSelectPro
           <div className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground/60 leading-none mb-1.5">
             <span>Synora Ai</span>
             <span>/</span>
-            <span className="text-purple-400 font-semibold">Proyek Saya</span>
+            <span className="text-purple-400 font-semibold">Proyek</span>
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground">
-            {userRole === "CLIENT" ? "Proyek Saya" : "Manajemen Proyek Enterprise"}
+            Daftar Proyek
           </h1>
           <p className="text-sm text-muted-foreground mt-1.5 font-medium leading-relaxed">
-            {userRole === "CLIENT" 
-              ? "Kelola, buat, dan pantau perkembangan proyek software otonom Anda."
-              : "Pantau seluruh proyek klien dan alokasi agen AI otonom secara global."}
+            Kelola, buat, dan pantau perkembangan proyek otonom.
           </p>
         </div>
 
-        {/* Action Button - Only for Client Role */}
-        {userRole === "CLIENT" && (
-          <button
-            onClick={onOpenCreateModal}
-            className="h-12 px-6 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm flex items-center gap-2.5 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/35 transition-all cursor-pointer shrink-0 border-none outline-none"
-          >
-            <Plus size={16} />
-            Proyek Baru
-          </button>
-        )}
+        {/* Action Button */}
+        <button
+          onClick={onOpenCreateModal}
+          className="h-12 px-6 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm flex items-center gap-2.5 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/35 transition-all cursor-pointer shrink-0 border-none outline-none"
+        >
+          <Plus size={16} />
+          Proyek Baru
+        </button>
       </div>
 
       {/* Search bar */}
@@ -94,9 +89,7 @@ export function ProjectList({ projects, userRole, onOpenCreateModal, onSelectPro
           <div>
             <p className="text-sm font-bold text-foreground">Tidak Ada Proyek Ditemukan</p>
             <p className="text-xs text-muted-foreground/60 mt-0.5 font-medium">
-              {userRole === "CLIENT" 
-                ? "Mulai dengan membuat proyek baru Anda pertama kali." 
-                : "Belum ada proyek yang didaftarkan oleh klien."}
+              Mulai dengan membuat proyek baru Anda pertama kali.
             </p>
           </div>
         </div>
@@ -110,9 +103,17 @@ export function ProjectList({ projects, userRole, onOpenCreateModal, onSelectPro
               <div className="space-y-3.5 text-left">
                 {/* Top Row: Client Badge & Stage */}
                 <div className="flex items-center justify-between">
-                  <span className={`text-[10px] font-extrabold tracking-widest uppercase border px-2 py-0.5 rounded ${getStatusColor(project.status)}`}>
-                    {getStatusIndonesian(project.status)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-extrabold tracking-widest uppercase border px-2 py-0.5 rounded ${getStatusColor(project.status)}`}>
+                      {getStatusIndonesian(project.status)}
+                    </span>
+                    {project.approval_status === "REVISION" && (
+                      <span className="text-[10px] font-extrabold tracking-widest uppercase bg-red-500/10 border border-red-500/30 text-red-500 px-2 py-0.5 rounded flex items-center gap-1 animate-pulse">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                        Revisi BRD
+                      </span>
+                    )}
+                  </div>
                   <span className="text-xs text-muted-foreground/60 font-mono">
                     {new Date(project.created_at).toLocaleDateString("id-ID")}
                   </span>
@@ -137,11 +138,9 @@ export function ProjectList({ projects, userRole, onOpenCreateModal, onSelectPro
                     <span>SYNORA AI Agent Core</span>
                   </div>
                   
-                  {userRole !== "CLIENT" && (
-                    <span className="text-muted-foreground/50">
-                      ID: <strong className="text-purple-400 font-mono">{project.id.substring(0, 8)}</strong>
-                    </span>
-                  )}
+                  <span className="text-muted-foreground/50">
+                    ID: <strong className="text-purple-400 font-mono">{project.id.substring(0, 8)}</strong>
+                  </span>
                 </div>
 
                 {/* Hover Overlay Actions */}
@@ -162,7 +161,7 @@ export function ProjectList({ projects, userRole, onOpenCreateModal, onSelectPro
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onDeleteProject(project);
+                      onDeleteProject(project.id);
                     }}
                     className="h-10 px-5 bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white font-bold text-xs rounded-xl flex items-center gap-1.5 border border-red-500/20 hover:border-red-600 transition-all outline-none cursor-pointer"
                   >

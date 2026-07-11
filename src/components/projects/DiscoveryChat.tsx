@@ -10,9 +10,7 @@ interface DiscoveryChatProps {
   chatInput: string;
   setChatInput: (val: string) => void;
   isSendingMessage: boolean;
-  isSubmittingProject: boolean;
   onSendMessage: (e: React.FormEvent) => void;
-  onSubmitForReview: () => void;
 }
 
 export function DiscoveryChat({
@@ -21,9 +19,7 @@ export function DiscoveryChat({
   chatInput,
   setChatInput,
   isSendingMessage,
-  isSubmittingProject,
   onSendMessage,
-  onSubmitForReview,
 }: DiscoveryChatProps) {
   let designImagesList: string[] = [];
   if (projectDetail.project.design_images) {
@@ -88,7 +84,7 @@ export function DiscoveryChat({
         </div>
 
         {/* Form Input */}
-        {projectDetail.discovery?.status !== "COMPLETED" ? (
+        {(projectDetail.discovery?.status !== "COMPLETED" && (projectDetail.discovery?.progress ?? 0) < 90) ? (
           <form
             onSubmit={onSendMessage}
             className="flex gap-2.5 border-t border-[#27272A]/70 pt-3.5 mt-2.5"
@@ -174,17 +170,12 @@ export function DiscoveryChat({
           </div>
         )}
 
-        {projectDetail.discovery?.status === "COMPLETED" && (
-          <button
-            onClick={onSubmitForReview}
-            disabled={isSubmittingProject}
-            className="w-full h-11 bg-purple-600 hover:bg-purple-500 disabled:bg-zinc-800 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 border-none outline-none shadow-lg shadow-purple-600/10 transition-all cursor-pointer shrink-0"
-          >
-            {isSubmittingProject
-              ? "Mengirim Proyek..."
-              : "Kirim Proyek ke CEO untuk Review"}
-            <Sparkles size={12} />
-          </button>
+        {((projectDetail.discovery?.status === "COMPLETED") || (projectDetail.discovery?.progress ?? 0) >= 90) && (
+          <div className="w-full p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
+            <p className="text-emerald-400 font-bold text-sm flex items-center justify-center gap-2">
+              <Sparkles size={16} /> Discovery Selesai
+            </p>
+          </div>
         )}
       </div>
     </div>

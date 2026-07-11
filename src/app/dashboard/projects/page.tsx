@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { useAuthStore } from "@/stores/auth.store";
 import api from "@/lib/api";
 import axios from "axios";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
@@ -22,9 +21,6 @@ import { ProjectDetailTabs } from "@/components/projects/ProjectDetailTabs";
 import { DeleteProjectModal } from "@/components/projects/DeleteProjectModal";
 
 export default function ProjectsPage() {
-  const user = useAuthStore((state) => state.user);
-  const hydrate = useAuthStore((state) => state.hydrate);
-
   const [isLoaded, setIsLoaded] = useState(false);
   const [projects, setProjects] = useState<BackendProject[]>([]);
   const [selectedProjectDetail, setSelectedProjectDetail] =
@@ -38,18 +34,10 @@ export default function ProjectsPage() {
   const [chatMessages, setChatMessages] = useState<ChatAnswer[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [isSendingMessage, setIsSendingMessage] = useState(false);
-  const [isSubmittingProject, setIsSubmittingProject] = useState(false);
-  const [isApproving, setIsApproving] = useState(false);
 
   // Delete Modal State
   const [projectToDelete, setProjectToDelete] = useState<BackendProject | null>(null);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
-
-  useEffect(() => {
-    hydrate();
-  }, [hydrate]);
-
-  const userRole = user?.role || "CLIENT";
 
   // Fetch projects list
   const fetchProjects = useCallback(async () => {
@@ -121,6 +109,15 @@ export default function ProjectsPage() {
         loadProjectDetails(projectIdParam);
       }, 0);
     }
+    const createParam = params.get("create");
+    if (createParam === "true") {
+      setTimeout(() => {
+        setIsModalOpen(true);
+      }, 0);
+      // Clean query params so it doesn't open again on page refresh
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, "", newUrl);
+    }
   }, []);
 
   // Poll selected project details if active in pipeline
@@ -145,6 +142,8 @@ export default function ProjectsPage() {
 
   const handleCreateProject = async (
     name: string,
+    clientName: string,
+    clientEmail: string,
     designImages: string,
     designNote: string,
   ) => {
@@ -152,6 +151,8 @@ export default function ProjectsPage() {
     try {
       const response = await api.post<BackendProject>("/projects", {
         project_name: name,
+        client_name: clientName,
+        client_email: clientEmail,
         design_images: designImages || null,
         design_note: designNote || null,
       });
@@ -226,46 +227,6 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleSubmitForReview = async () => {
-    if (!selectedProjectDetail || isSubmittingProject) return;
-    const projectId = selectedProjectDetail.project.id;
-
-    setIsSubmittingProject(true);
-    try {
-      await api.post(`/projects/${projectId}/submit`);
-      toast.success("Proyek Berhasil Dikirim!", {
-        description:
-          "Proyek sedang menunggu review CEO atau COO untuk diproduksi.",
-      });
-      setSelectedProjectDetail(null);
-      fetchProjects();
-    } catch {
-      toast.error("Gagal mengirim proyek untuk direview");
-    } finally {
-      setIsSubmittingProject(false);
-    }
-  };
-
-  const handleApproveProject = async () => {
-    if (!selectedProjectDetail || isApproving) return;
-    const projectId = selectedProjectDetail.project.id;
-
-    setIsApproving(true);
-    try {
-      await api.post(`/projects/${projectId}/approve`);
-      toast.success("Proyek Disetujui!", {
-        description:
-          "Pipelines produksi AI otonom telah dijalankan di latar belakang.",
-      });
-      loadProjectDetails(projectId);
-      fetchProjects();
-    } catch {
-      toast.error("Gagal menyetujui proyek");
-    } finally {
-      setIsApproving(false);
-    }
-  };
-
   const handleConfirmDelete = async () => {
     if (!projectToDelete) return;
     setIsDeletingProject(true);
@@ -279,6 +240,16 @@ export default function ProjectsPage() {
       toast.error("Gagal menghapus proyek");
     } finally {
       setIsDeletingProject(false);
+    }
+  };
+
+  const handleSendBRD = async (id: string) => {
+    try {
+      await api.post(`/projects/${id}/send-brd`);
+      toast.success("BRD berhasil dikirim ke email klien!");
+    } catch (err) {
+      console.error("Gagal mengirim BRD:", err);
+      toast.error("Gagal mengirim BRD");
     }
   };
 
@@ -333,10 +304,12 @@ export default function ProjectsPage() {
         /* ================== LIST VIEW ================== */
         <ProjectList
           projects={projects}
-          userRole={userRole}
           onOpenCreateModal={() => setIsModalOpen(true)}
           onSelectProject={(id) => loadProjectDetails(id)}
-          onDeleteProject={(proj) => setProjectToDelete(proj)}
+          onDeleteProject={(id: string) => {
+            const proj = projects.find((p) => p.id === id);
+            if (proj) setProjectToDelete(proj);
+          }}
         />
       ) : (
         /* ================== DETAILS VIEW ================== */
@@ -419,7 +392,7 @@ export default function ProjectsPage() {
             </div>
           </div>
 
-          {selectedProjectDetail.project.status === "DRAFT" ? (
+          {selectedProjectDetail.project.status === "DRAFT" && (selectedProjectDetail.discovery?.status !== "COMPLETED" && (selectedProjectDetail.discovery?.progress ?? 0) < 90) ? (
             
             <DiscoveryChat
               projectDetail={selectedProjectDetail}
@@ -427,17 +400,13 @@ export default function ProjectsPage() {
               chatInput={chatInput}
               setChatInput={setChatInput}
               isSendingMessage={isSendingMessage}
-              isSubmittingProject={isSubmittingProject}
               onSendMessage={handleSendMessage}
-              onSubmitForReview={handleSubmitForReview}
             />
           ) : (
             // Tabs
             <ProjectDetailTabs
               projectDetail={selectedProjectDetail}
-              userRole={userRole}
-              isApproving={isApproving}
-              onApprove={handleApproveProject}
+              onSendBRD={handleSendBRD}
             />
           )}
         </div>

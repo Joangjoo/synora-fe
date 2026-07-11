@@ -8,7 +8,6 @@ import {
   FileText, 
   Activity as ActivityIcon, 
   Sparkles, 
-  ChevronRight, 
   Clock, 
   Server, 
   Database, 
@@ -23,16 +22,12 @@ import { ProjectDetailResponse, Artifact } from "@/types/project";
 
 interface ProjectDetailTabsProps {
   projectDetail: ProjectDetailResponse;
-  userRole: string;
-  isApproving: boolean;
-  onApprove: () => Promise<void>;
+  onSendBRD?: (id: string) => void;
 }
 
 export function ProjectDetailTabs({
   projectDetail,
-  userRole,
-  isApproving,
-  onApprove
+  onSendBRD
 }: ProjectDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "discovery" | "pipeline" | "artifacts" | "activity">("overview");
   const [previewArtifact, setPreviewArtifact] = useState<Artifact | null>(null);
@@ -104,28 +99,6 @@ export function ProjectDetailTabs({
 
   return (
     <div className="space-y-6">
-      {/* Review Banner for CEO/COO if project status is SUBMITTED */}
-      {projectDetail.project.status === "SUBMITTED" && (userRole === "CEO" || userRole === "COO") && (
-        <div className="w-full p-6 border border-purple-500/20 bg-purple-500/5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 text-left animate-pulse">
-          <div>
-            <h3 className="text-sm font-extrabold uppercase tracking-wider text-purple-400 flex items-center gap-2">
-              <Sparkles size={16} /> Review Proyek Baru Masuk
-            </h3>
-            <p className="text-xs md:text-sm text-muted-foreground/85 mt-1 font-medium">
-              Klien telah menyelesaikan Discovery. Anda dapat meninjau **Discovery Summary** atau menyetujui langsung untuk menginisiasi pipelines produksi AI otonom.
-            </p>
-          </div>
-          <button
-            onClick={onApprove}
-            disabled={isApproving}
-            className="h-12 px-6 bg-purple-600 hover:bg-purple-500 disabled:bg-zinc-800 text-white font-bold text-sm rounded-xl flex items-center gap-2 shadow-lg shadow-purple-600/20 border-none outline-none cursor-pointer shrink-0 transition-colors"
-          >
-            {isApproving ? "Memulai Pipeline..." : "Setujui & Mulai Produksi AI"}
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      )}
-
       {/* Navigation Tabs */}
       <div className="flex border-b border-[#27272A] gap-8 mb-4">
         {(
@@ -171,7 +144,7 @@ export function ProjectDetailTabs({
 
               <div className="bg-[#18181B] border border-[#27272A] rounded-2xl p-6 space-y-4">
                 <h3 className="text-sm font-extrabold uppercase tracking-wider text-foreground">Status Pelaksanaan</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm font-medium">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm font-medium">
                   <div className="p-4 bg-[#111113] border border-[#27272A] rounded-xl">
                     <span className="text-xs text-muted-foreground/60 uppercase font-bold tracking-wider">Tahap Aktif</span>
                     <p className="text-foreground text-base font-bold mt-1 uppercase font-mono tracking-wide">
@@ -183,6 +156,27 @@ export function ProjectDetailTabs({
                     <p className="text-purple-400 text-base font-bold mt-1 font-mono">
                       {artifacts.length} / 9 Dokumen
                     </p>
+                  </div>
+                  <div className={`p-4 rounded-xl col-span-2 md:col-span-1 border ${
+                    projectDetail.project.approval_status === "REVISION" ? "bg-red-500/5 border-red-500/30" : "bg-[#111113] border-[#27272A]"
+                  }`}>
+                    <span className="text-xs text-muted-foreground/60 uppercase font-bold tracking-wider">Status Approval</span>
+                    <p className={`text-base font-bold mt-1 uppercase font-mono tracking-wide ${
+                        projectDetail.project.approval_status === "APPROVED" ? "text-emerald-400" :
+                        projectDetail.project.approval_status === "REVISION" ? "text-red-400" :
+                        projectDetail.project.approval_status === "SENT" ? "text-blue-400" :
+                        "text-amber-400"
+                    }`}>
+                      {projectDetail.project.approval_status || "PENDING"}
+                    </p>
+                    {projectDetail.project.approval_status === "REVISION" && projectDetail.project.approval_note && (
+                      <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                        <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider block mb-1">Catatan Klien:</span>
+                        <p className="text-xs text-red-300 leading-relaxed whitespace-pre-wrap">
+                          {projectDetail.project.approval_note}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -222,7 +216,17 @@ export function ProjectDetailTabs({
           <div className="bg-[#18181B] border border-[#27272A] rounded-2xl p-6 animate-fadeIn space-y-4">
             <div className="flex items-center justify-between border-b border-[#27272A] pb-3">
               <h3 className="text-sm font-extrabold uppercase tracking-wider text-foreground">Ringkasan Hasil Penelusuran Kebutuhan</h3>
-              <span className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider font-mono">Discovery Session Transcript</span>
+              <div className="flex items-center gap-4">
+                {projectDetail.discovery?.ai_summary && projectDetail.project.approval_status !== 'APPROVED' && (
+                  <button
+                    onClick={() => onSendBRD && onSendBRD(projectDetail.project.id)}
+                    className="h-8 px-3 bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] rounded-lg flex items-center gap-2 shadow-lg shadow-purple-600/20 border-none outline-none cursor-pointer transition-colors uppercase tracking-wider"
+                  >
+                    Kirim BRD ke Email Client
+                  </button>
+                )}
+                <span className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider font-mono">Discovery Session Transcript</span>
+              </div>
             </div>
             <div className="bg-[#111113] p-6 rounded-xl border border-[#27272A] text-sm leading-relaxed text-muted-foreground/90 whitespace-pre-wrap font-mono max-h-[500px] overflow-y-auto scrollbar-thin">
               {projectDetail.discovery?.ai_summary || "Rangkuman tidak tersedia."}

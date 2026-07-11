@@ -2,25 +2,17 @@
 
 import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { useAuthStore } from "@/stores/auth.store";
 
-// Split page views based on role
+// Dashboard view
 import { ClientDashboard } from "@/features/dashboard/components/client/ClientDashboard";
-import { EnterpriseDashboard } from "@/features/dashboard/components/enterprise/EnterpriseDashboard";
 
 export default function DashboardPage() {
-  const user = useAuthStore((state) => state.user);
-  const hydrate = useAuthStore((state) => state.hydrate);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    hydrate();
     const timer = setTimeout(() => setIsLoaded(true), 250);
     return () => clearTimeout(timer);
-  }, [hydrate]);
-
-  // Determine dashboard view based on active user role
-  const userRole = user?.role || "CLIENT";
+  }, []);
 
   if (!isLoaded) {
     return (
@@ -38,11 +30,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      {userRole === "CLIENT" ? (
-        <ClientDashboard />
-      ) : (
-        <EnterpriseDashboard />
-      )}
+      <ClientDashboard />
     </DashboardLayout>
   );
 }
