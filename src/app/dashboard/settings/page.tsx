@@ -20,7 +20,6 @@ export default function SettingsPage() {
 
   const handleSave = () => {
     setIsSaving(true);
-    // Simulate API call
     setTimeout(() => {
       setIsSaving(false);
       toast.success("Pengaturan berhasil disimpan.");

@@ -27,6 +27,8 @@ export default function AITeamPage() {
   // Edit Form State
   const [editForm, setEditForm] = useState<Partial<AIEmployee>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [availableModels, setAvailableModels] = useState<{id: string, name: string}[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
 
   const fetchEmployees = async () => {
     try {
@@ -45,6 +47,26 @@ export default function AITeamPage() {
       fetchEmployees();
     }, 0);
   }, []);
+
+  const fetchModelsForProvider = async (provider: string) => {
+    if (!provider) return;
+    try {
+      setIsLoadingModels(true);
+      const res = await api.get(`/ai-employees/models?provider=${provider}`);
+      setAvailableModels(res.data || []);
+    } catch (error) {
+      toast.error(`Gagal memuat model untuk provider ${provider}`);
+      setAvailableModels([]);
+    } finally {
+      setIsLoadingModels(false);
+    }
+  };
+
+  useEffect(() => {
+    if (editingId && editForm.provider) {
+      fetchModelsForProvider(editForm.provider);
+    }
+  }, [editingId, editForm.provider]);
 
   const handleEditClick = (employee: AIEmployee) => {
     setEditingId(employee.id);
@@ -149,13 +171,24 @@ export default function AITeamPage() {
                   
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Nama Model LLM</label>
-                    <input 
-                      type="text"
+                    <select
                       value={editForm.model}
                       onChange={(e) => setEditForm({...editForm, model: e.target.value})}
-                      className="w-full h-10 rounded-lg bg-[#111113] border border-[#27272A] px-3 text-xs text-foreground outline-none focus:border-purple-500/50"
-                      placeholder="e.g. llama-3.3-70b-versatile"
-                    />
+                      disabled={isLoadingModels}
+                      className="w-full h-10 rounded-lg bg-[#111113] border border-[#27272A] px-3 text-xs text-foreground outline-none focus:border-purple-500/50 disabled:opacity-50"
+                    >
+                      {isLoadingModels ? (
+                        <option value="">Memuat model...</option>
+                      ) : availableModels.length === 0 ? (
+                        <option value={editForm.model}>{editForm.model} (Custom)</option>
+                      ) : (
+                        availableModels.map((model) => (
+                          <option key={model.id} value={model.id}>
+                            {model.name}
+                          </option>
+                        ))
+                      )}
+                    </select>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">

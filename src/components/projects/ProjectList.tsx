@@ -101,14 +101,13 @@ export function ProjectList({ projects, onOpenCreateModal, onSelectProject, onDe
               className="bg-[#18181B] border border-[#27272A] rounded-2xl p-7 hover:border-purple-500/30 transition-all flex flex-col justify-between h-[340px] relative group overflow-hidden"
             >
               <div className="space-y-4 text-left">
-                {/* Top Row: Client Badge & Stage */}
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex flex-col items-start gap-2.5">
                     <span className={`text-xs font-black tracking-widest uppercase border px-3 py-1 rounded ${getStatusColor(project.status)}`}>
                       {getStatusIndonesian(project.status)}
                     </span>
                     {project.approval_status === "REVISION" && (
-                      <span className="text-xs font-black tracking-widest uppercase bg-red-500/10 border border-red-500/30 text-red-500 px-3 py-1 rounded flex items-center gap-1.5 animate-pulse">
+                      <span className="text-xs font-black tracking-widest uppercase bg-red-500/10 border border-red-500/30 text-red-500 px-3 py-1 rounded flex items-center gap-1.5 ">
                         <span className="w-2 h-2 rounded-full bg-red-500"></span>
                         Revisi BRD
                       </span>

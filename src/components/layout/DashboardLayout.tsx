@@ -13,10 +13,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="dark min-h-screen bg-[#09090B] text-foreground flex overflow-x-hidden">
-      {/* Sidebar - Dynamically adjusted width */}
       <Sidebar isCollapsed={isCollapsed} />
-
-      {/* Main Content Area - Dynamically adjusted padding */}
       <div
         className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${
           isCollapsed ? "pl-20" : "pl-64"
@@ -27,8 +24,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           isCollapsed={isCollapsed}
           onToggleSidebar={() => setIsCollapsed(!isCollapsed)}
         />
-
-        {/* Dynamic page content */}
         <main className="flex-1 p-8 overflow-y-auto">
           <div className="mx-auto max-w-6xl w-full">
             {children}

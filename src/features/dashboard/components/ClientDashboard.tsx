@@ -34,14 +34,14 @@ export function ClientDashboard() {
     setTimeout(() => {
       fetchDashboardData();
     }, 0);
-    const interval = setInterval(fetchDashboardData, 5000); // Poll every 5s for real-time dashboard updates
+    const interval = setInterval(fetchDashboardData, 5000); 
     return () => clearInterval(interval);
   }, [fetchDashboardData]);
 
   if (isLoading) {
     return (
       <div className="min-h-[40vh] w-full flex flex-col items-center justify-center gap-4 text-left">
-        <div className="size-8 rounded-full border-2 border-purple-500/20 border-t-purple-500 animate-spin" />
+        <div className="size-8 rounded-full border-2 border-purple-500/20 border-t-purple-500" />
         <p className="text-[10px] text-muted-foreground/60 font-semibold tracking-widest uppercase animate-pulse">
           Memuat Aktivitas Workspace...
         </p>
