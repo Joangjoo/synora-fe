@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 // Dashboard view
-import { ClientDashboard } from "@/features/dashboard/components/client/ClientDashboard";
+import { ClientDashboard } from "@/features/dashboard/components/ClientDashboard";
 
 export default function DashboardPage() {
   const [isLoaded, setIsLoaded] = useState(false);

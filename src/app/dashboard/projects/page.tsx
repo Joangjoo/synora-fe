@@ -120,12 +120,18 @@ export default function ProjectsPage() {
     }
   }, []);
 
-  // Poll selected project details if active in pipeline
+  // Poll selected project details if active in pipeline or generating BRD
   useEffect(() => {
     if (!selectedProjectDetail) return;
     
     const status = selectedProjectDetail.project.status;
-    if (status !== "IN_PROGRESS" && status !== "SUBMITTED") return;
+    const discoveryStatus = selectedProjectDetail.discovery?.status;
+    const discoveryProgress = selectedProjectDetail.discovery?.progress || 0;
+
+    const isPipelineActive = status === "IN_PROGRESS" || status === "SUBMITTED";
+    const isGeneratingBRD = discoveryStatus !== "COMPLETED" && discoveryProgress >= 90;
+
+    if (!isPipelineActive && !isGeneratingBRD) return;
 
     const interval = setInterval(() => {
       api.get<ProjectDetailResponse>(`/projects/${selectedProjectDetail.project.id}`)
@@ -138,12 +144,13 @@ export default function ProjectsPage() {
     }, 3000); // Poll every 3 seconds
 
     return () => clearInterval(interval);
-  }, [selectedProjectDetail?.project?.id, selectedProjectDetail?.project?.status, selectedProjectDetail]);
+  }, [selectedProjectDetail?.project?.id, selectedProjectDetail?.project?.status, selectedProjectDetail?.discovery?.status, selectedProjectDetail?.discovery?.progress, selectedProjectDetail]);
 
   const handleCreateProject = async (
     name: string,
     clientName: string,
     clientEmail: string,
+    categoryId: string | null,
     designImages: string,
     designNote: string,
   ) => {
@@ -153,6 +160,7 @@ export default function ProjectsPage() {
         project_name: name,
         client_name: clientName,
         client_email: clientEmail,
+        category_id: categoryId,
         design_images: designImages || null,
         design_note: designNote || null,
       });
@@ -179,12 +187,12 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent, isSkip: boolean = false) => {
     e.preventDefault();
-    if (!chatInput.trim() || !selectedProjectDetail || isSendingMessage) return;
+    if ((!chatInput.trim() && !isSkip) || !selectedProjectDetail || isSendingMessage) return;
 
     const projectId = selectedProjectDetail.project.id;
-    const msg = chatInput;
+    const msg = isSkip ? "[Klien Meminta Skip Topik Ini]" : chatInput;
     setChatInput("");
     setIsSendingMessage(true);
 
@@ -204,7 +212,7 @@ export default function ProjectsPage() {
       const response = await api.post<{
         answers: ChatAnswer[];
         discovery: Discovery;
-      }>(`/discoveries/${projectId}/chat`, { message: msg });
+      }>(`/discoveries/${projectId}/chat`, { message: isSkip ? "SKIP" : msg, is_skip: isSkip });
 
       setChatMessages(response.data.answers);
       setSelectedProjectDetail((prev) => {
@@ -250,6 +258,16 @@ export default function ProjectsPage() {
     } catch (err) {
       console.error("Gagal mengirim BRD:", err);
       toast.error("Gagal mengirim BRD");
+    }
+  };
+
+  const handleSendFinalDocs = async (id: string) => {
+    try {
+      await api.post(`/projects/${id}/send-final-docs`);
+      toast.success("Notifikasi dokumen final berhasil dikirim ke klien!");
+    } catch (err) {
+      console.error("Gagal mengirim notifikasi final:", err);
+      toast.error("Gagal mengirim notifikasi final");
     }
   };
 
@@ -368,7 +386,7 @@ export default function ProjectsPage() {
                   <span className="text-2xl font-black text-foreground font-mono">
                     {
                       selectedProjectDetail.project.status === "DRAFT"
-                        ? selectedProjectDetail.discovery?.progress || 10
+                        ? (selectedProjectDetail.discovery?.progress || 10)
                         : selectedProjectDetail.project.status === "SUBMITTED"
                           ? 20
                           : selectedProjectDetail.project.status === "COMPLETED"
@@ -383,7 +401,8 @@ export default function ProjectsPage() {
                       : "Pipeline Produksi"}
                   </span>
                 </div>
-                {selectedProjectDetail.project.status === "COMPLETED" ? (
+                {selectedProjectDetail.project.status === "COMPLETED" || 
+                 (selectedProjectDetail.project.status === "DRAFT" && selectedProjectDetail.discovery?.status === "COMPLETED") ? (
                   <CheckCircle2 className="size-10 text-emerald-400 shrink-0 animate-fadeIn" />
                 ) : (
                   <div className="size-10 rounded-full border-2 border-purple-500/20 border-t-purple-500 animate-spin shrink-0" />
@@ -407,6 +426,7 @@ export default function ProjectsPage() {
             <ProjectDetailTabs
               projectDetail={selectedProjectDetail}
               onSendBRD={handleSendBRD}
+              onSendFinalDocs={handleSendFinalDocs}
             />
           )}
         </div>

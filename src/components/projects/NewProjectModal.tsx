@@ -10,10 +10,17 @@ interface NewProjectModalProps {
     name: string,
     clientName: string,
     clientEmail: string,
+    categoryId: string | null,
     designImages: string,
     designNote: string,
   ) => Promise<void>;
   isCreating: boolean;
+}
+
+interface ProjectCategory {
+  id: string;
+  name: string;
+  description: string;
 }
 
 export function NewProjectModal({
@@ -25,8 +32,25 @@ export function NewProjectModal({
   const [name, setName] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [designNote, setDesignNote] = useState("");
   const [images, setImages] = useState<string[]>([]);
+  
+  const [categories, setCategories] = useState<ProjectCategory[]>([]);
+
+  // Fetch categories when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      import("@/lib/api").then(({ default: api }) => {
+        api.get("/projects/categories").then((res) => {
+          setCategories(res.data || []);
+          if (res.data?.length > 0) {
+            setCategoryId(res.data[0].id); // default selection
+          }
+        });
+      });
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -51,12 +75,13 @@ export function NewProjectModal({
 
     // Serialize images as a JSON string
     const imagesPayload = images.length > 0 ? JSON.stringify(images) : "";
-    await onCreate(name, clientName, clientEmail, imagesPayload, designNote);
+    await onCreate(name, clientName, clientEmail, categoryId || null, imagesPayload, designNote);
     
     // Reset state
     setName("");
     setClientName("");
     setClientEmail("");
+    setCategoryId("");
     setDesignNote("");
     setImages([]);
   };
@@ -133,6 +158,22 @@ export function NewProjectModal({
               onChange={(e) => setName(e.target.value)}
               className="w-full h-11 rounded-xl bg-[#111113] border border-[#27272A] px-4 text-xs text-foreground placeholder:text-muted-foreground/30 outline-none focus:border-purple-500/50 transition-colors"
             />
+          </div>
+
+          {/* Project Category */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Kategori Proyek
+            </label>
+            <select
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="w-full h-11 rounded-xl bg-[#111113] border border-[#27272A] px-4 text-xs text-foreground outline-none focus:border-purple-500/50 transition-colors"
+            >
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* Design Reference Notes */}

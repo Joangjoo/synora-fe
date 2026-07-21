@@ -41,7 +41,9 @@ export default function AITeamPage() {
   };
 
   useEffect(() => {
-    fetchEmployees();
+    setTimeout(() => {
+      fetchEmployees();
+    }, 0);
   }, []);
 
   const handleEditClick = (employee: AIEmployee) => {

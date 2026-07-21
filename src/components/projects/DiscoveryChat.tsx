@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { Send, FileText, AlertCircle, Sparkles } from "lucide-react";
+import React, { useState } from "react";
+import { Send, FileText, AlertCircle, Sparkles, Copy, Check } from "lucide-react";
 import { ProjectDetailResponse, ChatAnswer } from "@/types/project";
 
 interface DiscoveryChatProps {
@@ -10,7 +10,7 @@ interface DiscoveryChatProps {
   chatInput: string;
   setChatInput: (val: string) => void;
   isSendingMessage: boolean;
-  onSendMessage: (e: React.FormEvent) => void;
+  onSendMessage: (e: React.FormEvent, isSkip?: boolean) => void;
 }
 
 export function DiscoveryChat({
@@ -21,6 +21,16 @@ export function DiscoveryChat({
   isSendingMessage,
   onSendMessage,
 }: DiscoveryChatProps) {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopyText = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => {
+      setCopiedId(null);
+    }, 2000);
+  };
+
   let designImagesList: string[] = [];
   if (projectDetail.project.design_images) {
     try {
@@ -60,13 +70,30 @@ export function DiscoveryChat({
               }`}
             >
               <div
-                className={`p-3.5 rounded-2xl text-xs leading-relaxed font-medium ${
+                className={`p-3.5 pr-8 rounded-2xl text-xs leading-relaxed font-medium relative group/bubble ${
                   msg.sender === "USER"
                     ? "bg-purple-600 text-white rounded-tr-none text-left"
                     : "bg-[#111113] border border-[#27272A] text-muted-foreground rounded-tl-none text-left whitespace-pre-line"
                 }`}
               >
                 {msg.message}
+
+                {/* Copy Button */}
+                <button
+                  type="button"
+                  onClick={() => handleCopyText(msg.message, msg.id)}
+                  className={`absolute top-2 right-2 p-1 rounded-md opacity-0 group-hover/bubble:opacity-100 transition-opacity bg-[#18181B]/80 hover:bg-[#18181B] text-muted-foreground hover:text-foreground cursor-pointer border-none outline-none z-20 ${
+                    msg.sender === "USER" ? "hover:bg-purple-700 text-white/70 hover:text-white" : ""
+                  }`}
+                  title="Salin Pesan"
+                >
+                  {copiedId === msg.id ? (
+                    <Check size={12} className="text-emerald-400" />
+                  ) : (
+                    <Copy size={12} />
+                  )}
+                </button>
+
                 <span className="block text-[8px] text-muted-foreground/45 mt-1.5 font-mono">
                   {new Date(msg.created_at).toLocaleTimeString("id-ID")}
                 </span>
@@ -86,24 +113,39 @@ export function DiscoveryChat({
         {/* Form Input */}
         {(projectDetail.discovery?.status !== "COMPLETED" && (projectDetail.discovery?.progress ?? 0) < 90) ? (
           <form
-            onSubmit={onSendMessage}
-            className="flex gap-2.5 border-t border-[#27272A]/70 pt-3.5 mt-2.5"
+            onSubmit={(e) => onSendMessage(e, false)}
+            className="flex flex-col gap-2.5 border-t border-[#27272A]/70 pt-3.5 mt-2.5"
           >
-            <input
-              type="text"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Ketik balasan Anda mengenai kebutuhan bisnis..."
-              disabled={isSendingMessage}
-              className="flex-1 h-11 rounded-xl bg-[#111113] border border-[#27272A] px-4 text-xs text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-purple-500/50 transition-colors disabled:opacity-50"
-            />
-            <button
-              type="submit"
-              disabled={isSendingMessage || !chatInput.trim()}
-              className="size-11 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white flex items-center justify-center transition-colors cursor-pointer outline-none border-none"
-            >
-              <Send size={14} />
-            </button>
+            <div className="flex gap-2.5">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Ketik balasan Anda mengenai kebutuhan bisnis..."
+                disabled={isSendingMessage}
+                className="flex-1 h-11 rounded-xl bg-[#111113] border border-[#27272A] px-4 text-xs text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-purple-500/50 transition-colors disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={isSendingMessage || !chatInput.trim()}
+                className="size-11 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white flex items-center justify-center transition-colors cursor-pointer outline-none border-none"
+              >
+                <Send size={14} />
+              </button>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] text-zinc-500">
+                Poin sudah tercakup? Lewati agar AI fokus ke topik berikutnya.
+              </span>
+              <button
+                type="button"
+                onClick={(e) => onSendMessage(e, true)}
+                disabled={isSendingMessage}
+                className="text-[10px] font-bold text-muted-foreground hover:text-white bg-[#111113] border border-[#27272A] px-3 py-1.5 rounded-lg transition-colors outline-none"
+              >
+                Skip Topik Ini
+              </button>
+            </div>
           </form>
         ) : (
           <div className="border-t border-[#27272A]/70 pt-3.5 mt-2.5 flex flex-col gap-2">
